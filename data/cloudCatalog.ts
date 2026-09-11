@@ -1,0 +1,48 @@
+import { CloudService } from '@/types';
+
+export const CLOUD_SERVICES: CloudService[] = [
+  {
+    id: 'aws-ec2',
+    name: 'AWS EC2 Instance',
+    category: 'compute',
+    provider: 'aws',
+    baseMonthlyCost: 30.4,
+    iconName: 'Cpu',
+    unitLabel: 'Instances',
+    defaultUnits: 2,
+    costPerUnit: 15.2,
+  },
+  {
+    id: 'aws-rds',
+    name: 'AWS RDS Postgres',
+    category: 'database',
+    provider: 'aws',
+    baseMonthlyCost: 58.0,
+    iconName: 'Database',
+    unitLabel: 'Database Nodes',
+    defaultUnits: 1,
+    costPerUnit: 58.0,
+  },
+  {
+    id: 'aws-s3',
+    name: 'AWS S3 Bucket',
+    category: 'storage',
+    provider: 'aws',
+    baseMonthlyCost: 5.0,
+    iconName: 'HardDrive',
+    unitLabel: 'GB Storage',
+    defaultUnits: 250,
+    costPerUnit: 0.023,
+  },
+  {
+    id: 'gcp-gce',
+    name: 'GCP Compute Engine',
+    category: 'compute',
+    provider: 'gcp',
+    baseMonthlyCost: 24.5,
+    iconName: 'Cpu',
+    unitLabel: 'Instances',
+    defaultUnits: 2,
+    costPerUnit: 12.25,
+  },
+];
