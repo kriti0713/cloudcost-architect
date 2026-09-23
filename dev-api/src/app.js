@@ -1,51 +1,39 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
+import { connectDB } from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
-import { errorHandler, ApiError } from "./middleware/errorHandler.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// Enable CORS for frontend integration
+app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.status(200).json({
-    message: "Welcome to Users, Projects & Tasks REST API",
-    endpoints: {
-      health: "/health",
-      users: "/api/users",
-      projects: "/api/projects",
-      tasks: "/api/tasks",
-    },
-  });
-});
+// Database Connection
+connectDB();
 
-// Routes
+// API Routes
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 
-// Health check
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "OK", timestamp: new Date() });
-});
-
-// 404 Route Handler
-app.use((req, res, next) => {
-  next(new ApiError(404, `Route ${req.originalUrl} not found`));
-});
-
-// Centralized Error Handler
+// Global Error Handler
 app.use(errorHandler);
 
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Task 2 REST API running on http://localhost:${PORT}`);
+  console.log(`🚀 Task 3 API running on http://localhost:5000`);
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'CloudCost Architect API is running',
+  });
 });

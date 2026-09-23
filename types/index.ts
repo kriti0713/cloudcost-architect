@@ -8,27 +8,27 @@ export interface RegionInfo {
 export const REGION_MULTIPLIERS: Record<CloudRegion, RegionInfo> = {
   'us-east': { name: 'US East (N. Virginia)', multiplier: 1.0 },
   'us-west': { name: 'US West (Oregon)', multiplier: 1.05 },
-  'eu-central': { name: 'EU (Frankfurt)', multiplier: 1.15 },
-  'ap-southeast': { name: 'Asia Pacific (Singapore)', multiplier: 1.2 },
+  'eu-central': { name: 'EU Central (Frankfurt)', multiplier: 1.15 },
+  'ap-southeast': { name: 'Asia Pacific (Singapore)', multiplier: 1.12 },
 };
 
 export interface CloudService {
   id: string;
   name: string;
   category: string;
-  provider: 'aws' | 'gcp' | 'azure';
-  costPerUnit: number;
+  provider: string;
+  baseMonthlyCost: number;
+  iconName: string;
   unitLabel: string;
-  defaultUnits?: number;
-  description?: string;
-  icon?: string;
+  defaultUnits: number;
+  costPerUnit: number;
 }
 
-export interface ArchitectureNodeData {
+export type ArchitectureNodeData = {
   label: string;
   service: CloudService;
   units: number;
   monthlyCost: number;
-  onUnitsChange: (nodeId: string, newUnits: number) => void;
+  onUnitsChange?: (id: string, newUnits: number) => void;
   [key: string]: unknown;
-}
+};

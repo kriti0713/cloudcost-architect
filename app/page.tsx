@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -9,17 +9,17 @@ import {
   useEdgesState,
   addEdge,
   type Connection,
-  type Edge as FlowEdge,
-  type Node as FlowNode,
+  type Edge,
+  type Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
-import { CloudNode } from '../components/canvas/CloudNode';
-import { ServiceCatalog } from '../components/sidebar/ServiceCatalog';
-import { CostAnalyticsModal } from '../components/analytics/CostAnalyticsModal';
-import { CostHeader } from '../components/analytics/CostHeader';
-import { CloudService, ArchitectureNodeData, CloudRegion, REGION_MULTIPLIERS } from '../types';
-import { CLOUD_SERVICES } from '../data/cloudCatalog';
+import { CloudNode } from '@/components/canvas/CloudNode';
+import { ServiceCatalog } from '@/components/sidebar/ServiceCatalog';
+import { CostAnalyticsModal } from '@/components/analytics/CostAnalyticsModal';
+import { CostHeader } from '@/components/analytics/CostHeader';
+import { CloudService, ArchitectureNodeData, CloudRegion, REGION_MULTIPLIERS } from '@/types';
+import { CLOUD_SERVICES } from '@/data/cloudCatalog';
 
 const nodeTypes = {
   cloudNode: CloudNode,
@@ -30,24 +30,20 @@ const defaultEdgeOptions = {
   style: { stroke: '#22d3ee', strokeWidth: 2 },
 };
 
-const STORAGE_KEY = 'cloudcost_architect_state';
-
 export default function Workspace() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [monthlyBudget, setMonthlyBudget] = useState<number>(200);
   const [selectedRegion, setSelectedRegion] = useState<CloudRegion>('us-east');
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   const handleUnitsChange = useCallback(
     (nodeId: string, newUnits: number) => {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            const data = node.data as ArchitectureNodeData;
-            const serviceCost = data?.service?.costPerUnit || 0;
-            const cost = serviceCost * newUnits;
+            const nodeData = node.data as ArchitectureNodeData;
+            const cost = (nodeData?.service?.costPerUnit || 0) * newUnits;
             return {
               ...node,
               data: {
@@ -64,54 +60,13 @@ export default function Workspace() {
     [setNodes]
   );
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const { savedNodes, savedEdges, savedBudget, savedRegion } = JSON.parse(saved);
-        if (savedNodes) {
-          const restoredNodes = savedNodes.map((n: FlowNode) => ({
-            ...n,
-            data: {
-              ...(n.data as ArchitectureNodeData),
-              onUnitsChange: handleUnitsChange,
-            },
-          }));
-          setNodes(restoredNodes);
-        }
-        if (savedEdges) setEdges(savedEdges);
-        if (savedBudget) setMonthlyBudget(savedBudget);
-        if (savedRegion) setSelectedRegion(savedRegion);
-      }
-    } catch (e) {
-      console.warn('Could not restore local state:', e);
-    } finally {
-      setIsHydrated(true);
-    }
-  }, [setNodes, setEdges, handleUnitsChange]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    try {
-      const stateToSave = {
-        savedNodes: nodes,
-        savedEdges: edges,
-        savedBudget: monthlyBudget,
-        savedRegion: selectedRegion,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    } catch (e) {
-      console.warn('Could not persist local state:', e);
-    }
-  }, [nodes, edges, monthlyBudget, selectedRegion, isHydrated]);
-
   const handleAddNode = useCallback(
     (service: CloudService) => {
       const newNodeId = `node-${Date.now()}`;
       const initialUnits = service.defaultUnits || 1;
       const initialCost = service.costPerUnit * initialUnits;
 
-      const newNode: FlowNode = {
+      const newNode: Node = {
         id: newNodeId,
         type: 'cloudNode',
         position: {
@@ -138,7 +93,7 @@ export default function Workspace() {
     const rdsService = CLOUD_SERVICES.find((s) => s.id === 'aws-rds') || CLOUD_SERVICES[1] || CLOUD_SERVICES[0];
     const s3Service = CLOUD_SERVICES.find((s) => s.id === 'aws-s3') || CLOUD_SERVICES[2] || CLOUD_SERVICES[0];
 
-    const presetNodes: FlowNode[] = [
+    const presetNodes: Node[] = [
       {
         id: 'node-ec2',
         type: 'cloudNode',
@@ -177,7 +132,7 @@ export default function Workspace() {
       },
     ];
 
-    const presetEdges: FlowEdge[] = [
+    const presetEdges: Edge[] = [
       { id: 'e-ec2-rds', source: 'node-ec2', target: 'node-rds', animated: true, style: { stroke: '#22d3ee', strokeWidth: 2 } },
       { id: 'e-ec2-s3', source: 'node-ec2', target: 'node-s3', animated: true, style: { stroke: '#22d3ee', strokeWidth: 2 } },
     ];
@@ -189,7 +144,6 @@ export default function Workspace() {
   const handleClearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
-    localStorage.removeItem(STORAGE_KEY);
   }, [setNodes, setEdges]);
 
   const onConnect = useCallback(
@@ -238,15 +192,15 @@ export default function Workspace() {
 
         <main className="flex-1 h-full relative bg-[#070b19]">
           <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
-            fitView
-          >
+             nodes={nodes}
+             edges={edges}
+             onNodesChange={onNodesChange}
+             onEdgesChange={onEdgesChange}
+             onConnect={onConnect}
+             nodeTypes={nodeTypes as any}
+             defaultEdgeOptions={defaultEdgeOptions}
+             fitView
+>
             <Background color="#1e293b" gap={24} size={1.5} />
             <Controls className="!bg-slate-900/80 !border-slate-800 !text-slate-100 fill-slate-100" />
           </ReactFlow>

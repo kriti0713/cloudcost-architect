@@ -1,31 +1,53 @@
-import { store } from "../data/store.js";
+import { Project } from "../models/Project.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
-export const getProjects = (req, res) => {
-  const projectsWithStats = store.projects.map((project) => {
-    const projectTasks = store.tasks.filter((t) => t.projectId === project.id);
-    const completedTasks = projectTasks.filter((t) => t.status === "completed").length;
-    const totalTasks = projectTasks.length;
-    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    return { ...project, totalTasks, completedTasks, progress };
-  });
-
-  res.status(200).json({ success: true, data: projectsWithStats });
+export const getProjects = async (req, res, next) => {
+  try {
+    const projects = await Project.find();
+    res.status(200).json(projects);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const createProject = (req, res, next) => {
-  const { userId, name, description, techStack } = req.body;
-  const userExists = store.users.some((u) => u.id === userId);
-  if (!userExists) return next(new ApiError(404, "Associated User ID not found"));
+export const getProjectById = async (req, res, next) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) throw new ApiError(404, "Project not found");
+    res.status(200).json(project);
+  } catch (error) {
+    next(error);
+  }
+};
 
-  const newProject = {
-    id: `p${Date.now()}`,
-    userId,
-    name,
-    description: description || "",
-    techStack: techStack || [],
-  };
-  store.projects.push(newProject);
-  res.status(201).json({ success: true, data: newProject });
+export const createProject = async (req, res, next) => {
+  try {
+    const project = await Project.create(req.body);
+    res.status(201).json(project);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProject = async (req, res, next) => {
+  try {
+    const project = await Project.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!project) throw new ApiError(404, "Project not found");
+    res.status(200).json(project);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteProject = async (req, res, next) => {
+  try {
+    const project = await Project.findByIdAndDelete(req.params.id);
+    if (!project) throw new ApiError(404, "Project not found");
+    res.status(200).json({ message: "Project deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
 };

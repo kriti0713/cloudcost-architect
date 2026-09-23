@@ -46,3 +46,5 @@ export const CLOUD_SERVICES: CloudService[] = [
     costPerUnit: 12.25,
   },
 ];
+
+export const CLOUD_CATALOG = CLOUD_SERVICES;

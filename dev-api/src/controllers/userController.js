@@ -1,25 +1,53 @@
-import { store } from "../data/store.js";
+import { User } from "../models/User.js";
 import { ApiError } from "../middleware/errorHandler.js";
 
-export const getUsers = (req, res) => {
-  res.status(200).json({ success: true, data: store.users });
+export const getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getUserById = (req, res, next) => {
-  const user = store.users.find((u) => u.id === req.params.id);
-  if (!user) return next(new ApiError(404, "User not found"));
-  res.status(200).json({ success: true, data: user });
+export const getUserById = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) throw new ApiError(404, "User not found");
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const createUser = (req, res) => {
-  const { name, email, role, avatarUrl } = req.body;
-  const newUser = {
-    id: `u${Date.now()}`,
-    name,
-    email,
-    role: role || "Developer",
-    avatarUrl: avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-  };
-  store.users.push(newUser);
-  res.status(201).json({ success: true, data: newUser });
+export const getUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findOne();
+    if (!user) throw new ApiError(404, "User profile not found");
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createUser = async (req, res, next) => {
+  try {
+    const user = await User.create(req.body);
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserProfile = async (req, res, next) => {
+  try {
+    const user = await User.findOneAndUpdate({}, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!user) throw new ApiError(404, "User profile not found");
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
 };
